@@ -2,11 +2,11 @@
 
 ### Result
 
-| Framework          | SQL  | TableAPI | Tuple | Row  | POJO | Document |
-| ------------------ | ---- | -------- | ----- | ---- | ---- | -------- |
-| Flink              |      | 37s      | 54s   | 45s  | 54s  | 1m10s    |
-| Spark              |      |          |       | \    |      |          |
-| Flink + Expression |      |          |       | 48s  |      |          |
+| Framework          | SQL  | TableAPI | Tuple | Row       | POJO | Document |
+| ------------------ | ---- | -------- | ----- | --------- | ---- | -------- |
+| Flink              | 21s  | 16s      | 19s   | 20s       | 21s  | 27s      |
+| Spark              | 19s  |          |       |           | 10s  |          |
+| Flink + Expression |      |          |       | 26s (20s) |      | 30s      |
 
 
 
