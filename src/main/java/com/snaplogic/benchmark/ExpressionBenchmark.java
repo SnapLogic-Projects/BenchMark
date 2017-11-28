@@ -1,15 +1,12 @@
 package com.snaplogic.benchmark;
 
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.snaplogic.ExecutionException;
 import com.snaplogic.common.expressions.ScopeStack;
 import com.snaplogic.Document;
 import com.snaplogic.DocumentImpl;
-import com.snaplogic.ExecutionException;
 import com.snaplogic.expression.ExpressionUtil;
 import com.snaplogic.expression.GlobalScope;
 import com.snaplogic.expression.SnapLogicExpression;
@@ -46,7 +43,7 @@ public class ExpressionBenchmark {
                     });
     private static final GlobalScope GLOBAL_SCOPE = new GlobalScope();
     private static final DefaultValueHandler DEFAULT_VALUE_HANDLER = new DefaultValueHandler();
-    private static final String expression = "$ProviderState == 'AL'";
+    private static final String expression = "$5 == 'AL'";
     private static SnapLogicExpression snapLogicExpression;
 
     public static void main(String[] args) throws Exception {
@@ -66,8 +63,6 @@ public class ExpressionBenchmark {
                 e.printStackTrace();
             }
         }
-
-        env.startNewSession();
 
         for (int i = 0; i < 1; i++) {
 
@@ -104,45 +99,45 @@ public class ExpressionBenchmark {
             }
         });
 
-        SnapFilter snapFilter = new SnapFilter(scopes, snapLogicExpression);
-        DataSet<Document> filterOut = parsedSet.filter(snapFilter);
+//        SnapFilter snapFilter = new SnapFilter(scopes, snapLogicExpression);
+//        DataSet<Document> filterOut = parsedSet.filter(snapFilter);
 
-//        // Filter Snap
-//        DataSet<Document> filterOut = parsedSet.filter(new FilterFunction<Document>() {
-//            @Override
-//            public boolean filter(Document document) throws Exception {
-//                SnapLogicExpression snapLogicExpression = PARSE_TREE_CACHE.get(expression);
-//
-//                ScopeStack scopeStack;
-//                if (scopes != null && scopes.getClass() == ScopeStack.class) {
-//                    scopeStack = (ScopeStack) scopes;
-//                } else {
-//                    scopeStack = new ScopeStack();
-//                    if (scopes != null) {
-//                        scopeStack.pushAllScopes(scopes);
-//                    } else {
-//                        scopeStack.push(GLOBAL_SCOPE);
-//                    }
-//                }
-//                try {
-//                    return (Boolean) snapLogicExpression.evaluate(document.get(), scopeStack, DEFAULT_VALUE_HANDLER);
-//                } catch (SnapDataException |ExecutionException e) {
-//                    throw e;
-//                } catch (Throwable th) {
-//                    throw new SnapDataException(th, "Unexpected error occurred while " +
-//                            "evaluating expression: %s")
-//                            .formatWith(expression)
-//                            .withResolution("Please check your expression");
-//                }
-//            }
-//
-//        });
+        // Filter Snap
+        DataSet<Document> filterOut = parsedSet.filter(new FilterFunction<Document>() {
+            @Override
+            public boolean filter(Document document) throws Exception {
+                SnapLogicExpression snapLogicExpression = PARSE_TREE_CACHE.get(expression);
+
+                ScopeStack scopeStack;
+                if (scopes != null && scopes.getClass() == ScopeStack.class) {
+                    scopeStack = (ScopeStack) scopes;
+                } else {
+                    scopeStack = new ScopeStack();
+                    if (scopes != null) {
+                        scopeStack.pushAllScopes(scopes);
+                    } else {
+                        scopeStack.push(GLOBAL_SCOPE);
+                    }
+                }
+                try {
+                    return (Boolean) snapLogicExpression.evaluate(document.get(), scopeStack, DEFAULT_VALUE_HANDLER);
+                } catch (SnapDataException |ExecutionException e) {
+                    throw e;
+                } catch (Throwable th) {
+                    throw new SnapDataException(th, "Unexpected error occurred while " +
+                            "evaluating expression: %s")
+                            .formatWith(expression)
+                            .withResolution("Please check your expression");
+                }
+            }
+
+        });
 
         // Sort Snap
         DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
-                return (String) ((Map<String, Object>) document.get()).get("ProviderCity");
+                return (String) ((Map<String, Object>) document.get()).get("4");
             }
         }, Order.DESCENDING).setParallelism(1);
 
@@ -153,51 +148,21 @@ public class ExpressionBenchmark {
                     @Override
                     public String format(Document document) {
                         Map<String, Object> record = (Map<String, Object>)document.get();
-                        return record.get("ProviderId") + "|"
-                                + record.get("ProviderName") + "|"
-                                + record.get("ProviderStreetAddress") + "|"
-                                + record.get("ProviderCity") + "|"
-                                + record.get("ProviderState") + "|"
-                                + record.get("ProviderZipCode") + "|"
-                                + record.get("HospitalReferralRegionDescription") + "|";
+                        return record.get("0") + "|"
+                                + record.get("1") + "|"
+                                + record.get("2") + "|"
+                                + record.get("3") + "|"
+                                + record.get("4") + "|"
+                                + record.get("5") + "|"
+                                + record.get("6") + "|"
+                                + record.get("7") + "|"
+                                + record.get("8") + "|"
+                                + record.get("9") + "|"
+                                + record.get("10") + "|"
+                                + record.get("11") + "|";
                     }
                 }
         ).setParallelism(1);
     }
 
-    private static class SnapFilter implements FilterFunction<Document> {
-
-        ScopeStack scopes;
-        SnapLogicExpression snapLogicExpression;
-
-        public SnapFilter(ScopeStack scopeStack, SnapLogicExpression snapLogicExpression) {
-            this.scopes = scopeStack;
-            this.snapLogicExpression = snapLogicExpression;
-        }
-
-        @Override
-        public boolean filter(Document value) throws Exception {
-            ScopeStack scopeStack;
-            if (scopes != null && scopes.getClass() == ScopeStack.class) {
-                scopeStack = (ScopeStack) scopes;
-            } else {
-                scopeStack = new ScopeStack();
-                if (scopes != null) {
-                    scopeStack.pushAllScopes(scopes);
-                } else {
-                    scopeStack.push(GLOBAL_SCOPE);
-                }
-            }
-            try {
-                return (boolean)snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
-            } catch (SnapDataException| com.snaplogic.api.ExecutionException e) {
-                throw e;
-            } catch (Throwable th) {
-                throw new SnapDataException(th, "Unexpected error occurred while " +
-                        "evaluating expression: %s")
-                        .formatWith(expression)
-                        .withResolution("Please check your expression");
-            }
-        }
-    }
 }

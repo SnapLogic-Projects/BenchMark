@@ -66,7 +66,6 @@ public class SnapRowBenchmark {
             }
         }
 
-
         for (int i = 0; i < 1; i++) {
 
             process(env, scopeStack);
@@ -104,8 +103,36 @@ public class SnapRowBenchmark {
         Row2SnapRow mapper = new Row2SnapRow();
         DataSet<SnapRow> snapRowDataSet = dataSet.map(mapper);
 
-        SnapFilter snapFilter = new SnapFilter(scopes, snapLogicExpression);
-        DataSet<SnapRow> filtered = snapRowDataSet.filter(snapFilter);
+//        SnapFilter snapFilter = new SnapFilter(scopes, snapLogicExpression);
+//        DataSet<SnapRow> filtered = snapRowDataSet.filter(snapFilter);
+
+        DataSet<SnapRow> filtered = snapRowDataSet.filter(new FilterFunction<SnapRow>() {
+            @Override
+            public boolean filter(SnapRow value) throws Exception {
+                ScopeStack scopeStack;
+                if (scopes != null && scopes.getClass() == ScopeStack.class) {
+                    scopeStack = (ScopeStack) scopes;
+                } else {
+                    scopeStack = new ScopeStack();
+                    if (scopes != null) {
+                        scopeStack.pushAllScopes(scopes);
+                    } else {
+                        scopeStack.push(GLOBAL_SCOPE);
+                    }
+                }
+                try {
+                    return (boolean)snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
+                } catch (SnapDataException|ExecutionException e) {
+                    throw e;
+                } catch (Throwable th) {
+                    throw new SnapDataException(th, "Unexpected error occurred while " +
+                            "evaluating expression: %s")
+                            .formatWith(expression)
+                            .withResolution("Please check your expression");
+                }
+            }
+        });
+
 
         DataSet<SnapRow> sorted = filtered.sortPartition(new KeySelector<SnapRow, String>() {
             @Override
@@ -146,42 +173,42 @@ public class SnapRowBenchmark {
         }
     }
 
-    private static class SnapFilter implements FilterFunction<SnapRow> {
-
-        ScopeStack scopes;
-        SnapLogicExpression snapLogicExpression;
-
-        public SnapFilter(ScopeStack scopeStack, SnapLogicExpression expression) {
-            this.scopes = scopeStack;
-            this.snapLogicExpression = expression;
-        }
-
-        @Override
-        public boolean filter(SnapRow value) throws Exception {
-            ScopeStack scopeStack;
-            if (scopes != null && scopes.getClass() == ScopeStack.class) {
-                scopeStack = (ScopeStack) scopes;
-            } else {
-                scopeStack = new ScopeStack();
-                if (scopes != null) {
-                    scopeStack.pushAllScopes(scopes);
-                } else {
-                    scopeStack.push(GLOBAL_SCOPE);
-                }
-            }
-            try {
-                if (this.snapLogicExpression == null)
-                    return true;
-                else
-                    return (boolean)this.snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
-            } catch (SnapDataException|ExecutionException e) {
-                throw e;
-            } catch (Throwable th) {
-                throw new SnapDataException(th, "Unexpected error occurred while " +
-                        "evaluating expression: %s")
-                        .formatWith(expression)
-                        .withResolution("Please check your expression");
-            }
-        }
-    }
+//    private static class SnapFilter implements FilterFunction<SnapRow> {
+//
+//        ScopeStack scopes;
+//        SnapLogicExpression snapLogicExpression;
+//
+//        public SnapFilter(ScopeStack scopeStack, SnapLogicExpression expression) {
+//            this.scopes = scopeStack;
+//            this.snapLogicExpression = expression;
+//        }
+//
+//        @Override
+//        public boolean filter(SnapRow value) throws Exception {
+//            ScopeStack scopeStack;
+//            if (scopes != null && scopes.getClass() == ScopeStack.class) {
+//                scopeStack = (ScopeStack) scopes;
+//            } else {
+//                scopeStack = new ScopeStack();
+//                if (scopes != null) {
+//                    scopeStack.pushAllScopes(scopes);
+//                } else {
+//                    scopeStack.push(GLOBAL_SCOPE);
+//                }
+//            }
+//            try {
+//                if (this.snapLogicExpression == null)
+//                    return true;
+//                else
+//                    return (boolean)this.snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
+//            } catch (SnapDataException|ExecutionException e) {
+//                throw e;
+//            } catch (Throwable th) {
+//                throw new SnapDataException(th, "Unexpected error occurred while " +
+//                        "evaluating expression: %s")
+//                        .formatWith(expression)
+//                        .withResolution("Please check your expression");
+//            }
+//        }
+//    }
 }

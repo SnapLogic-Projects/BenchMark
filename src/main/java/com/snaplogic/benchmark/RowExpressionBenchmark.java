@@ -3,6 +3,7 @@ package com.snaplogic.benchmark;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.snaplogic.Document;
 import com.snaplogic.api.ExecutionException;
 import com.snaplogic.common.expressions.ScopeStack;
 import com.snaplogic.expression.ExpressionUtil;
@@ -95,15 +96,42 @@ public class RowExpressionBenchmark {
                 BasicTypeInfo.INT_TYPE_INFO, BasicTypeInfo.STRING_TYPE_INFO, BasicTypeInfo.STRING_TYPE_INFO,
                 BasicTypeInfo.STRING_TYPE_INFO};
 
-        CsvTableSource csvTableSource = new CsvTableSource("test_big.csv", fieldNames, fieldTypes,
+        CsvTableSource csvTableSource = new CsvTableSource("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv", fieldNames, fieldTypes,
                 ",", "\n", '"', true, null, false);
 
         DataSet<Row> dataSet = csvTableSource.getDataSet(env);
 
-        SnapFilter snapFilter = new SnapFilter(scopes, snapLogicExpression);
-        DataSet<Row> filtered = dataSet.filter(snapFilter);
+        DataSet<Row> filterOut = dataSet.filter(new FilterFunction<Row>() {
+            @Override
+            public boolean filter(Row value) throws Exception {
+                SnapLogicExpression snapLogicExpression = PARSE_TREE_CACHE.get(expression);
 
-        DataSet<Row> sorted = filtered.sortPartition(new KeySelector<Row, String>() {
+                ScopeStack scopeStack;
+                if (scopes != null && scopes.getClass() == ScopeStack.class) {
+                    scopeStack = (ScopeStack) scopes;
+                } else {
+                    scopeStack = new ScopeStack();
+                    if (scopes != null) {
+                        scopeStack.pushAllScopes(scopes);
+                    } else {
+                        scopeStack.push(GLOBAL_SCOPE);
+                    }
+                }
+                try {
+                    return (boolean) snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
+                } catch (SnapDataException | com.snaplogic.ExecutionException e) {
+                    throw e;
+                } catch (Throwable th) {
+                    throw new SnapDataException(th, "Unexpected error occurred while " +
+                            "evaluating expression: %s")
+                            .formatWith(expression)
+                            .withResolution("Please check your expression");
+                }
+            }
+
+        });
+
+        DataSet<Row> sorted = filterOut.sortPartition(new KeySelector<Row, String>() {
             @Override
             public String getKey(Row value) throws Exception {
                 return (String)value.getField(4);
@@ -129,44 +157,5 @@ public class RowExpressionBenchmark {
                     }
                 }
         ).setParallelism(1);
-    }
-
-    private static class SnapFilter implements FilterFunction<Row> {
-
-        ScopeStack scopes;
-        SnapLogicExpression snapLogicExpression;
-
-        public SnapFilter(ScopeStack scopeStack, SnapLogicExpression expression) {
-            this.scopes = scopeStack;
-            this.snapLogicExpression = expression;
-        }
-
-        @Override
-        public boolean filter(Row value) throws Exception {
-            ScopeStack scopeStack;
-            if (scopes != null && scopes.getClass() == ScopeStack.class) {
-                scopeStack = (ScopeStack) scopes;
-            } else {
-                scopeStack = new ScopeStack();
-                if (scopes != null) {
-                    scopeStack.pushAllScopes(scopes);
-                } else {
-                    scopeStack.push(GLOBAL_SCOPE);
-                }
-            }
-            try {
-                if (this.snapLogicExpression == null)
-                    return true;
-                else
-                    return (boolean)this.snapLogicExpression.evaluate(value, scopeStack, DEFAULT_VALUE_HANDLER);
-            } catch (SnapDataException |ExecutionException e) {
-                throw e;
-            } catch (Throwable th) {
-                throw new SnapDataException(th, "Unexpected error occurred while " +
-                        "evaluating expression: %s")
-                        .formatWith(expression)
-                        .withResolution("Please check your expression");
-            }
-        }
     }
 }
