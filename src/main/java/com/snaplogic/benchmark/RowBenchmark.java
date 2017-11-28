@@ -111,7 +111,7 @@ public class RowBenchmark {
                                 + record.getField(8) + "|"
                                 + record.getField(9) + "|"
                                 + record.getField(10) + "|"
-                                + record.getField(11) + "|";
+                                + record.getField(11);
                     }
                 }
         ).setParallelism(1);

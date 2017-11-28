@@ -62,7 +62,7 @@ public class TableAPIBenchmark {
                 .build();
 
         tableEnv.registerTableSource("csvTable", csvSource);
-        Table result = tableEnv.scan("csvTable").filter("ProviderState === 'AL'").orderBy("ProviderCity");
+        Table result = tableEnv.scan("csvTable").filter("ProviderState === 'AL'").orderBy("ProviderCity.desc");
 
 
         result.writeToSink(new CsvTableSink(
