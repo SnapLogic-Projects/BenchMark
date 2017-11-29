@@ -59,7 +59,7 @@ public class RowExpressionRangeBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env, scopeStack,fieldNames);
+            process(env, scopeStack,fieldNames, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -70,7 +70,7 @@ public class RowExpressionRangeBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env, scopeStack,fieldNames);
+            process(env, scopeStack,fieldNames, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -80,7 +80,7 @@ public class RowExpressionRangeBenchmark {
     }
 
 
-    public static void process(ExecutionEnvironment env, final ScopeStack scopes, String[] fieldNames) throws java.util.concurrent.ExecutionException {
+    public static void process(ExecutionEnvironment env, final ScopeStack scopes, String[] fieldNames, String testfile, String outputPath) throws java.util.concurrent.ExecutionException {
         snapLogicExpression = PARSE_TREE_CACHE.get(expression);
         // parse header
 
@@ -90,7 +90,7 @@ public class RowExpressionRangeBenchmark {
                 BasicTypeInfo.INT_TYPE_INFO, BasicTypeInfo.STRING_TYPE_INFO, BasicTypeInfo.STRING_TYPE_INFO,
                 BasicTypeInfo.STRING_TYPE_INFO};
 
-        CsvTableSource csvTableSource = new CsvTableSource("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv", fieldNames, fieldTypes,
+        CsvTableSource csvTableSource = new CsvTableSource(testfile, fieldNames, fieldTypes,
                 ",", "\n", '"', true, null, false);
 
         DataSet<Row> dataSet = csvTableSource.getDataSet(env);
@@ -125,15 +125,16 @@ public class RowExpressionRangeBenchmark {
 
         });
 
-        DataSet<Row> ranged = filterOut.partitionByRange(4).withOrders(Order.DESCENDING);
-        DataSet<Row> sorted = ranged.sortPartition(new KeySelector<Row, String>() {
+        DataSet<Row> sorted = filterOut
+                .partitionByRange(0).withOrders(Order.ASCENDING)
+                .sortPartition(new KeySelector<Row, String>() {
             @Override
             public String getKey(Row value) throws Exception {
                 return (String)value.getField(0);
             }
         }, Order.ASCENDING);
 
-        sorted.writeAsFormattedText("RowExpressionRangeBenchmark.csv", OVERWRITE,
+        sorted.writeAsFormattedText(outputPath, OVERWRITE,
                 new TextOutputFormat.TextFormatter<Row>() {
                     @Override
                     public String format(Row record) {

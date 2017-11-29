@@ -18,7 +18,7 @@ public class SQLAPIBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -29,7 +29,7 @@ public class SQLAPIBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -38,12 +38,12 @@ public class SQLAPIBenchmark {
         }
     }
 
-    static void process(ExecutionEnvironment env) throws IOException {
+    static void process(ExecutionEnvironment env, String testfile, String outputPath) throws IOException {
         BatchTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
 
         CsvTableSource csvSource = CsvTableSource
                 .builder()
-                .path("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+                .path(testfile)
                 .field("DRGDefinition", Types.STRING())
                 .field("ProviderId", Types.INT())
                 .field("ProviderName", Types.STRING())
@@ -70,7 +70,7 @@ public class SQLAPIBenchmark {
 
 
         result.writeToSink(new CsvTableSink(
-                "SQLAPIBenchmark.csv",
+                outputPath,
                 "|",
                 1,
                 FileSystem.WriteMode.OVERWRITE

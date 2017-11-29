@@ -1,26 +1,17 @@
 package com.snaplogic.benchmark;
 
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.snaplogic.Document;
 import com.snaplogic.DocumentImpl;
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.io.TextInputFormat;
 import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple12;
-import org.apache.flink.core.fs.Path;
-import org.apache.flink.streaming.api.datastream.DataStream;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +27,7 @@ public class DocumentOnlyBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -46,7 +37,7 @@ public class DocumentOnlyBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -55,7 +46,7 @@ public class DocumentOnlyBenchmark {
         }
     }
 
-    static void process(ExecutionEnvironment env) throws IOException {
+    static void process(ExecutionEnvironment env, String testFile, String outputPath) throws IOException {
 
 //        // csv Reader Snap
 //        CsvMapper mapper = new CsvMapper();
@@ -89,7 +80,7 @@ public class DocumentOnlyBenchmark {
 //            }
 //        });
         DataSet<Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String>> csvInput
-                = env.readCsvFile("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+                = env.readCsvFile(testFile)
                 .ignoreFirstLine()
                 .parseQuotedStrings('"')
                 .types(String.class, Integer.class, String.class, String.class, String.class, String.class, String.class, String.class,
@@ -118,15 +109,17 @@ public class DocumentOnlyBenchmark {
         });
 
         // Sort Snap
-        DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
+        DataSet<Document> sortOut = filterOut
+                .partitionByRange(0).withOrders(Order.ASCENDING)
+                .sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
                 return (String) ((Map<String, Object>) document.get()).get("0");
             }
-        }, Order.ASCENDING).setParallelism(1);
+        }, Order.ASCENDING);
 
         // Writer Snap
-        sortOut.writeAsFormattedText("DocumentOnlyBenchmark.csv", OVERWRITE,
+        sortOut.writeAsFormattedText(outputPath, OVERWRITE,
                 new TextOutputFormat.TextFormatter<Document>() {
                     @Override
                     public String format(Document document) {

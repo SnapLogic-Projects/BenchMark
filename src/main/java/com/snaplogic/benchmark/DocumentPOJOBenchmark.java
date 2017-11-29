@@ -159,7 +159,7 @@ public class DocumentPOJOBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -169,7 +169,7 @@ public class DocumentPOJOBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -178,10 +178,9 @@ public class DocumentPOJOBenchmark {
         }
     }
 
-    static void process(ExecutionEnvironment env) throws IOException {
+    static void process(ExecutionEnvironment env, String testFile, String outputPath) throws IOException {
 
-        final DataSet<POJOBenchmark.InputCSV> csvInput = env.readCsvFile(
-                "/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+        final DataSet<POJOBenchmark.InputCSV> csvInput = env.readCsvFile(testFile)
                 .ignoreFirstLine()
                 .parseQuotedStrings('"')
                 .pojoType(POJOBenchmark.InputCSV.class, "dRGDefinition", "providerId", "providerName", "providerStreetAddress",
@@ -215,20 +214,22 @@ public class DocumentPOJOBenchmark {
         DataSet<Document> filterOut = parsedSet.filter(new FilterFunction<Document>() {
             @Override
             public boolean filter(Document document) throws Exception {
-                return ((Map<String, Object>) document.get()).get("providerState").equals("AL");
+                return ((Map<String, Object>) document.get()).get("dRGDefinition").equals("AL");
             }
         });
 
         // Sort Snap
-        DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
+        DataSet<Document> sortOut = filterOut
+                .partitionByRange(0).withOrders(Order.ASCENDING)
+                .sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
                 return (String) ((Map<String, Object>) document.get()).get("dRGDefinition");
             }
-        }, Order.ASCENDING).setParallelism(1);
+        }, Order.ASCENDING);
 
         // Writer Snap
-        sortOut.writeAsFormattedText("DocumentPOJOBenchmark.csv", OVERWRITE,
+        sortOut.writeAsFormattedText(outputPath, OVERWRITE,
                 new TextOutputFormat.TextFormatter<Document>() {
                     @Override
                     public String format(Document document) {

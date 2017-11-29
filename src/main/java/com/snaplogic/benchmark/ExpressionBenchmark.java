@@ -20,11 +20,8 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple12;
-import row.SnapRow;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +53,7 @@ public class ExpressionBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env, scopeStack);
+            process(env, scopeStack, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -66,7 +63,7 @@ public class ExpressionBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env, scopeStack);
+            process(env, scopeStack, args[1], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -75,11 +72,11 @@ public class ExpressionBenchmark {
         }
     }
 
-    static void process(ExecutionEnvironment env, final ScopeStack scopes) throws IOException, java.util.concurrent.ExecutionException {
+    static void process(ExecutionEnvironment env, final ScopeStack scopes, String testfile, String outputPath) throws IOException, java.util.concurrent.ExecutionException {
 
         snapLogicExpression = PARSE_TREE_CACHE.get(expression);
         DataSet<Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String>> csvInput
-                = env.readCsvFile("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+                = env.readCsvFile(testfile)
                 .ignoreFirstLine()
                 .parseQuotedStrings('"')
                 .types(String.class, Integer.class, String.class, String.class, String.class, String.class, String.class, String.class,
@@ -134,16 +131,18 @@ public class ExpressionBenchmark {
         });
 
         // Sort Snap
-        DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
+        DataSet<Document> sortOut = filterOut
+                .partitionByRange(0).withOrders(Order.ASCENDING)
+                .sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
                 return (String) ((Map<String, Object>) document.get()).get("0");
             }
-        }, Order.ASCENDING).setParallelism(1);
+        }, Order.ASCENDING);
 
         // Writer Snap
 
-        sortOut.writeAsFormattedText("ExpressionBenchmark.csv", OVERWRITE,
+        sortOut.writeAsFormattedText(outputPath, OVERWRITE,
                 new TextOutputFormat.TextFormatter<Document>() {
                     @Override
                     public String format(Document document) {

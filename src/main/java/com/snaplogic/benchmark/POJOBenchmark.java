@@ -149,7 +149,7 @@ public class POJOBenchmark {
         // warn up
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -161,7 +161,7 @@ public class POJOBenchmark {
 
         for (int i = 0; i < 1; i++) {
 
-            process(env);
+            process(env, args[0], args[1]);
             try {
                 env.execute();
             } catch (Exception e) {
@@ -170,10 +170,9 @@ public class POJOBenchmark {
         }
     }
 
-    static void process(ExecutionEnvironment env) {
+    static void process(ExecutionEnvironment env, String testfile, String outputPath) {
 
-        DataSet<InputCSV> csvInput = env.readCsvFile(
-                "/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+        DataSet<InputCSV> csvInput = env.readCsvFile(testfile)
                 .ignoreFirstLine()
                 .parseQuotedStrings('"')
                 .pojoType(InputCSV.class, "dRGDefinition", "providerId", "providerName", "providerStreetAddress",
@@ -185,10 +184,10 @@ public class POJOBenchmark {
             public boolean filter(InputCSV inputCSV) throws Exception {
                 return inputCSV.getProviderState().equals("AL");
             }
-        }).sortPartition("dRGDefinition", Order.ASCENDING)
-                .setParallelism(1);
+        }).partitionByRange(0).withOrders(Order.ASCENDING)
+                .sortPartition("dRGDefinition", Order.ASCENDING);
 
-        output0.writeAsFormattedText("POJOBenchmark.csv", OVERWRITE,
+        output0.writeAsFormattedText(outputPath, OVERWRITE,
                 new TextOutputFormat.TextFormatter<InputCSV>() {
                     @Override
                     public String format(InputCSV inputCSV) {
