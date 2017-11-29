@@ -92,11 +92,11 @@ public class RowBenchmark {
         DataSet<Row> sorted = filtered.sortPartition(new KeySelector<Row, String>() {
             @Override
             public String getKey(Row value) throws Exception {
-                return (String)value.getField(4);
+                return (String)value.getField(0);
             }
-        }, Order.DESCENDING).setParallelism(1);
+        }, Order.ASCENDING).setParallelism(1);
 
-        sorted.writeAsFormattedText("BenchmarkRow.csv", OVERWRITE,
+        sorted.writeAsFormattedText("RowBenchmark.csv", OVERWRITE,
                 new TextOutputFormat.TextFormatter<Row>() {
                     @Override
                     public String format(Row record) {

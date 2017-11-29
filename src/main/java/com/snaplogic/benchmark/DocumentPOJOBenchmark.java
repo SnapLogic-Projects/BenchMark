@@ -223,28 +223,28 @@ public class DocumentPOJOBenchmark {
         DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
-                return (String) ((Map<String, Object>) document.get()).get("providerCity");
+                return (String) ((Map<String, Object>) document.get()).get("dRGDefinition");
             }
-        }, Order.DESCENDING).setParallelism(1);
+        }, Order.ASCENDING).setParallelism(1);
 
         // Writer Snap
-        sortOut.writeAsFormattedText("BenchmarkWithoutExpr.csv", OVERWRITE,
+        sortOut.writeAsFormattedText("DocumentPOJOBenchmark.csv", OVERWRITE,
                 new TextOutputFormat.TextFormatter<Document>() {
                     @Override
                     public String format(Document document) {
                         Map<String, Object> record = (Map<String, Object>)document.get();
-                        return record.get("0") + "|"
-                                + record.get("1") + "|"
-                                + record.get("2") + "|"
-                                + record.get("3") + "|"
-                                + record.get("4") + "|"
-                                + record.get("5") + "|"
-                                + record.get("6") + "|"
-                                + record.get("7") + "|"
-                                + record.get("8") + "|"
-                                + record.get("9") + "|"
-                                + record.get("10") + "|"
-                                + record.get("11") + "|";
+                        return record.get("dRGDefinition") + "|"
+                                + record.get("providerId") + "|"
+                                + record.get("providerName") + "|"
+                                + record.get("providerStreetAddress") + "|"
+                                + record.get("providerCity") + "|"
+                                + record.get("providerState") + "|"
+                                + record.get("providerZipCode") + "|"
+                                + record.get("hospitalReferralRegionDescription") + "|"
+                                + record.get("totalDischarges") + "|"
+                                + record.get("averageCoveredCharges") + "|"
+                                + record.get("averageTotalPayments") + "|"
+                                + record.get("averageMedicarePayments");
                     }
                 }
         ).setParallelism(1);

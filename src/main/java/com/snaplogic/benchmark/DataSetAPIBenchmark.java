@@ -53,10 +53,10 @@ public class DataSetAPIBenchmark {
             public boolean filter(Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String> input) throws Exception {
                 return input.f5.equals("AL");
             }
-        }).sortPartition(4, Order.DESCENDING)
+        }).sortPartition(0, Order.ASCENDING)
                 .setParallelism(1);
 
-        output0.writeAsCsv("BenchmarkTuple.csv", "\n", "|", OVERWRITE).setParallelism(1);
+        output0.writeAsCsv("DataSetAPIBenchmark.csv", "\n", "|", OVERWRITE).setParallelism(1);
     }
 
 }

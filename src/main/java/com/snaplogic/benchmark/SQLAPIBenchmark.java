@@ -61,17 +61,16 @@ public class SQLAPIBenchmark {
                 .build();
 
         tableEnv.registerTableSource("csvTable", csvSource);
-        //Table result = tableEnv.scan("csvTable").filter("ProviderState === 'AL'").orderBy("ProviderCity");
         Table result = tableEnv.sql(
                 "SELECT * " +
                         "FROM csvTable " +
                         "WHERE ProviderState = 'AL'" +
-                        "ORDER BY ProviderCity DESC"
+                        "ORDER BY DRGDefinition ASC"
         );
 
 
         result.writeToSink(new CsvTableSink(
-                "BenchmarkSQL.csv",
+                "SQLAPIBenchmark.csv",
                 "|",
                 1,
                 FileSystem.WriteMode.OVERWRITE

@@ -1,13 +1,14 @@
 package com.snaplogic.benchmark;
 
+import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple12;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableEnvironment;
-import org.apache.flink.table.api.Types;
-import org.apache.flink.table.api.java.BatchTableEnvironment;
+import org.apache.flink.table.api.java.*;
+import org.apache.flink.table.expressions.Desc;
 import org.apache.flink.table.sinks.CsvTableSink;
-import org.apache.flink.table.sources.CsvTableSource;
 
 import java.io.IOException;
 
@@ -42,31 +43,44 @@ public class TableAPIBenchmark {
     static void process(ExecutionEnvironment env) throws IOException {
         BatchTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
 
-        CsvTableSource csvSource = CsvTableSource
-                .builder()
-                .path("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
-                .field("DRGDefinition", Types.STRING())
-                .field("ProviderId", Types.INT())
-                .field("ProviderName", Types.STRING())
-                .field("ProviderStreetAddress", Types.STRING())
-                .field("ProviderCity", Types.STRING())
-                .field("ProviderState", Types.STRING())
-                .field("ProviderZipCode", Types.STRING())
-                .field("HospitalReferralRegionDescription",Types.STRING())
-                .field("TotalDischarges",Types.INT())
-                .field("AverageCoveredCharges",Types.STRING())
-                .field("AverageTotalPayments",Types.STRING())
-                .field("AverageMedicarePayments",Types.STRING())
+        DataSet<Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String>> csvInput
+                = env.readCsvFile("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
                 .ignoreFirstLine()
-                .quoteCharacter('"')    //string field
-                .build();
+                .parseQuotedStrings('"')
+                .types(String.class, Integer.class, String.class, String.class, String.class, String.class, String.class, String.class,
+                        Integer.class, String.class, String.class, String.class);
 
-        tableEnv.registerTableSource("csvTable", csvSource);
-        Table result = tableEnv.scan("csvTable").filter("ProviderState === 'AL'").orderBy("ProviderCity.desc");
+//        CsvTableSource csvSource = CsvTableSource
+//                .builder()
+//                .path("/Users/dchen/GitRepo/snaplogic/Snap-document/FlinkImpl/src/main/resources/test_5m.csv")
+//                .field("DRGDefinition", Types.STRING())
+//                .field("ProviderId", Types.INT())
+//                .field("ProviderName", Types.STRING())
+//                .field("ProviderStreetAddress", Types.STRING())
+//                .field("ProviderCity", Types.STRING())
+//                .field("ProviderState", Types.STRING())
+//                .field("ProviderZipCode", Types.STRING())
+//                .field("HospitalReferralRegionDescription",Types.STRING())
+//                .field("TotalDischarges",Types.INT())
+//                .field("AverageCoveredCharges",Types.STRING())
+//                .field("AverageTotalPayments",Types.STRING())
+//                .field("AverageMedicarePayments",Types.STRING())
+//                .ignoreFirstLine()
+//                .quoteCharacter('"')    //string field
+//                .build();
+//
+//        tableEnv.registerTableSource("csvTable", csvSource);
+//        Table csvTable = tableEnv.scan("csvTable");
+
+        Table csvTable = tableEnv.fromDataSet(csvInput, "dRGDefinition, providerId, providerName, providerStreetAddress," +
+                "providerCity, providerState, providerZipCode, hospitalReferralRegionDescription," +
+                "totalDischarges, averageCoveredCharges, averageTotalPayments, averageMedicarePayments");
+        Table result = csvTable.where("providerState === 'AL'")
+                .orderBy("providerId.asc");
 
 
         result.writeToSink(new CsvTableSink(
-                "BenchmarkTable.csv",
+                "TableAPIBenchmark.csv",
                 "|",
                 1,
                 FileSystem.WriteMode.OVERWRITE

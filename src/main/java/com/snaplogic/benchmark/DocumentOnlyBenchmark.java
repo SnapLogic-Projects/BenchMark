@@ -121,12 +121,12 @@ public class DocumentOnlyBenchmark {
         DataSet<Document> sortOut = filterOut.sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {
-                return (String) ((Map<String, Object>) document.get()).get("4");
+                return (String) ((Map<String, Object>) document.get()).get("0");
             }
-        }, Order.DESCENDING).setParallelism(1);
+        }, Order.ASCENDING).setParallelism(1);
 
         // Writer Snap
-        sortOut.writeAsFormattedText("BenchmarkWithoutExpr.csv", OVERWRITE,
+        sortOut.writeAsFormattedText("DocumentOnlyBenchmark.csv", OVERWRITE,
                 new TextOutputFormat.TextFormatter<Document>() {
                     @Override
                     public String format(Document document) {
@@ -142,7 +142,7 @@ public class DocumentOnlyBenchmark {
                                 + record.get("8") + "|"
                                 + record.get("9") + "|"
                                 + record.get("10") + "|"
-                                + record.get("11") + "|";
+                                + record.get("11") ;
                     }
                 }
         ).setParallelism(1);

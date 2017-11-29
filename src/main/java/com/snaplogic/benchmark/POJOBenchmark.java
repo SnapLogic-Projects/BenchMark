@@ -185,21 +185,25 @@ public class POJOBenchmark {
             public boolean filter(InputCSV inputCSV) throws Exception {
                 return inputCSV.getProviderState().equals("AL");
             }
-        }).sortPartition("providerCity", Order.DESCENDING)
+        }).sortPartition("dRGDefinition", Order.ASCENDING)
                 .setParallelism(1);
 
-        output0.writeAsFormattedText("BenchmarkPOJO.csv", OVERWRITE,
+        output0.writeAsFormattedText("POJOBenchmark.csv", OVERWRITE,
                 new TextOutputFormat.TextFormatter<InputCSV>() {
                     @Override
                     public String format(InputCSV inputCSV) {
-                        return inputCSV.getProviderState() + "|"
-                                + inputCSV.getAverageCoveredCharges() + "|"
-                                + inputCSV.getAverageMedicarePayments() + "|"
-                                + inputCSV.getAverageTotalPayments() + "|"
-                                + inputCSV.getdRGDefinition() + "|"
-                                + inputCSV.getHospitalReferralRegionDescription() + "|"
+                        return inputCSV.getdRGDefinition() + "|"
+                                + inputCSV.getProviderId() + "|"
                                 + inputCSV.getProviderName() + "|"
-                                + inputCSV.getProviderName() + "|";
+                                + inputCSV.getProviderStreetAddress() + "|"
+                                + inputCSV.getProviderCity() + "|"
+                                + inputCSV.getProviderState() + "|"
+                                + inputCSV.getProviderZipCode() + "|"
+                                + inputCSV.getHospitalReferralRegionDescription() + "|"
+                                + inputCSV.getTotalDischarges() + "|"
+                                + inputCSV.getAverageCoveredCharges() + "|"
+                                + inputCSV.getAverageTotalPayments() + "|"
+                                + inputCSV.getAverageMedicarePayments();
                     }
                 }).setParallelism(1);
     }

@@ -134,11 +134,11 @@ public class RowExpressionBenchmark {
         DataSet<Row> sorted = filterOut.sortPartition(new KeySelector<Row, String>() {
             @Override
             public String getKey(Row value) throws Exception {
-                return (String)value.getField(4);
+                return (String)value.getField(0);
             }
-        }, Order.DESCENDING).setParallelism(1);
+        }, Order.ASCENDING).setParallelism(1);
 
-        sorted.writeAsFormattedText("BenchmarkSnapRow.csv", OVERWRITE,
+        sorted.writeAsFormattedText("RowExpressionBenchmark.csv", OVERWRITE,
                 new TextOutputFormat.TextFormatter<Row>() {
                     @Override
                     public String format(Row record) {
@@ -153,7 +153,7 @@ public class RowExpressionBenchmark {
                                 + record.getField(8) + "|"
                                 + record.getField(9) + "|"
                                 + record.getField(10) + "|"
-                                + record.getField(11) + "|";
+                                + record.getField(11) ;
                     }
                 }
         ).setParallelism(1);
