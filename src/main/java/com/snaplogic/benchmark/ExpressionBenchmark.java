@@ -132,7 +132,6 @@ public class ExpressionBenchmark {
 
         // Sort Snap
         DataSet<Document> sortOut = filterOut
-                .partitionByRange(0).withOrders(Order.ASCENDING)
                 .sortPartition(new KeySelector<Document, String>() {
             @Override
             public String getKey(Document document) throws Exception {

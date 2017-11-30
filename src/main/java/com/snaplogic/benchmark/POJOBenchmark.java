@@ -184,7 +184,7 @@ public class POJOBenchmark {
             public boolean filter(InputCSV inputCSV) throws Exception {
                 return inputCSV.getProviderState().equals("AL");
             }
-        }).partitionByRange(0).withOrders(Order.ASCENDING)
+        }).partitionByRange("dRGDefinition").withOrders(Order.ASCENDING)
                 .sortPartition("dRGDefinition", Order.ASCENDING);
 
         output0.writeAsFormattedText(outputPath, OVERWRITE,
