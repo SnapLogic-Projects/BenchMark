@@ -12,11 +12,11 @@
 #### 8GB
 | Framework          | SQL  | TableAPI | Tuple | Row       | POJO | Document |
 | ------------------ | ---- | -------- | ----- | --------- | ---- | -------- |
-| Flink              | 1m8s | 16s      | 1m6s  | 1m11s     | 1m16s| 1m49s    |
+| Flink              | 1m8s |          | 1m6s  | 1m11s     | 1m16s| 1m49s    |
 | Spark              | 2m42s|          |       |           | 1m18s|          |
 | Flink + Expression |      |          |       | 1m52s     |      | 2m45s    |
 
-
+SnapLogic: 3m31s - 3m
 
 ### Cheatsheet
 
