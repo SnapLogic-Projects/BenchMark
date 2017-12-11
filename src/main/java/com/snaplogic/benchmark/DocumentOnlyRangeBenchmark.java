@@ -1,0 +1,107 @@
+package com.snaplogic.benchmark;
+
+import com.snaplogic.Document;
+import com.snaplogic.DocumentImpl;
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.operators.Order;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.io.TextOutputFormat;
+import org.apache.flink.api.java.tuple.Tuple12;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE;
+
+public class DocumentOnlyRangeBenchmark {
+
+    public static void main(String[] args) throws Exception {
+
+        // get flink environment.
+        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+        // warn up
+        for (int i = 0; i < 1; i++) {
+
+            process(env, args[0], args[1]);
+            try {
+                env.execute();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (int i = 0; i < 1; i++) {
+
+            process(env, args[0], args[1]);
+            try {
+                env.execute();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static void process(ExecutionEnvironment env, String testFile, String outputPath) throws IOException {
+
+        DataSet<Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String>> csvInput
+                = env.readCsvFile(testFile)
+                .ignoreFirstLine()
+                .parseQuotedStrings('"')
+                .types(String.class, Integer.class, String.class, String.class, String.class, String.class, String.class, String.class,
+                        Integer.class, String.class, String.class, String.class);
+
+        DataSet<Document> parsedSet = csvInput.map(new MapFunction<Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String>, Document>() {
+            @Override
+            public Document map(Tuple12<String, Integer, String, String, String, String, String, String, Integer, String, String, String> data) throws Exception {
+
+                Map<String, Object> map = new HashMap<>();
+
+                for (int i = 0; i < 12 ; i++) {
+                    map.put(Integer.toString(i), data.getField(i));
+                }
+
+                return new DocumentImpl(map);
+            }
+        });
+
+        // Filter Sna
+        DataSet<Document> filterOut = parsedSet.filter(new FilterFunction<Document>() {
+            @Override
+            public boolean filter(Document document) throws Exception {
+                return ((Map<String, Object>) document.get()).get("5").equals("AL");
+            }
+        });
+
+        // Sort Snap
+        DataSet<Document> sortOut = filterOut
+                .partitionByRange(new DocKeySelector()).withOrders(Order.ASCENDING)
+                .sortPartition(new DocKeySelector(), Order.ASCENDING);
+
+        // Writer Snap
+        sortOut.writeAsFormattedText(outputPath, OVERWRITE,
+                new TextOutputFormat.TextFormatter<Document>() {
+                    @Override
+                    public String format(Document document) {
+                        Map<String, Object> record = (Map<String, Object>)document.get();
+                        return record.get("0") + "|"
+                                + record.get("1") + "|"
+                                + record.get("2") + "|"
+                                + record.get("3") + "|"
+                                + record.get("4") + "|"
+                                + record.get("5") + "|"
+                                + record.get("6") + "|"
+                                + record.get("7") + "|"
+                                + record.get("8") + "|"
+                                + record.get("9") + "|"
+                                + record.get("10") + "|"
+                                + record.get("11") ;
+                    }
+                }
+        ).setParallelism(1);
+    }
+}
