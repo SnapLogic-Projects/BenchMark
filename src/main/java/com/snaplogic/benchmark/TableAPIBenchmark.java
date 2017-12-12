@@ -210,8 +210,10 @@ public class TableAPIBenchmark {
 //        tableEnv.registerTableSource("csvTable", csvSource);
 //        Table csvTable = tableEnv.scan("csvTable");
 
-        Table csvTable = tableEnv.fromDataSet(csvInput);
-        Table result = csvTable.where("providerState === 'AL'")
+        Table csvTable = tableEnv.fromDataSet(csvInput, "dRGDefinition, providerId, providerName, providerStreetAddress, "+
+                "providerCity, providerState, providerZipCode, hospitalReferralRegionDescription, " +
+                "totalDischarges, averageCoveredCharges, averageTotalPayments, averageMedicarePayments");
+        Table result = csvTable
                 .orderBy("dRGDefinition.asc");
 
 
