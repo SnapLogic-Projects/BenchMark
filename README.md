@@ -19,13 +19,46 @@
 SnapLogic: 3m31s - 3m
 
 ### Cheatsheet
-
-mvn install:install-file -Dfile=/Users/dchen/Downloads/ExpressionImplDependencies-1.0-SNAPSHOT.jar -DgroupId=com.snaplogic -DartifactId=ExpressionImplDependencies -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DgenereatePom=true
+```bash
+mvn install:install-file \
+-Dfile=$PACKAGE_PATH \
+-DgroupId=com.snaplogic \
+-DartifactId=$PACKAGE_NAME \
+-Dversion=$PACKAGE_VERSION \
+-Dpackaging=jar \
+-DgenereatePom=true
+```
 
 ### Setup
-1. mvn install:install-file -Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/DocumentImpl/target/DocumentImpl-1.0-SNAPSHOT.jar -DgroupId=com.snaplogic -DartifactId=DocumentImpl -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DgenereatePom=true
-2. mvn install:install-file -Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/ExpressionImplDependencies/target/ExpressionImplDependencies-1.0-SNAPSHOT.jar -DgroupId=com.snaplogic -DartifactId=ExpressionImplDependencies -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DgenereatePom=true
-3. mvn install:install-file -Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/ExpressionImpl/target/ExpressionImpl-1.0-SNAPSHOT.jar -DgroupId=com.snaplogic -DartifactId=ExpressionImpl -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DgenereatePom=true
+```bash
+1. mvn install:install-file \
+-Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/DocumentImpl/target/DocumentImpl-1.0-SNAPSHOT.jar \
+-DgroupId=com.snaplogic \
+-DartifactId=DocumentImpl \
+-Dversion=1.0-SNAPSHOT \
+-Dpackaging=jar \
+-DgenereatePom=true
+```
+```bash
+2. mvn install:install-file \
+-Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/ExpressionImplDependencies/target/ExpressionImplDependencies-1.0-SNAPSHOT.jar \
+-DgroupId=com.snaplogic \
+-DartifactId=ExpressionImplDependencies \
+-Dversion=1.0-SNAPSHOT \
+-Dpackaging=jar \
+-DgenereatePom=true
+```
+```bash
+3. mvn install:install-file \
+-Dfile=/Users/benson/Dropbox/Snaplogic/Projects/Unify/git/Snap-document/ExpressionImpl/target/ExpressionImpl-1.0-SNAPSHOT.jar \
+-DgroupId=com.snaplogic \
+-DartifactId=ExpressionImpl \
+-Dversion=1.0-SNAPSHOT \
+-Dpackaging=jar \
+-DgenereatePom=true
+```
 
 ### Execute
-`bin/flink run -c com.snaplogic.benchmark.DataSetAPIBenchmark /Users/benson/Dropbox/Snaplogic/Projects/Unify/git/BenchMark/target/quickstart-0.1-flinkdemo-fat-jar.jar ~/Downloads/test_8GB.csv ~/Downloads/result.csv`
+```bash
+bin/flink run -c com.snaplogic.benchmark.DataSetAPIBenchmark /Users/benson/Dropbox/Snaplogic/Projects/Unify/git/BenchMark/target/quickstart-0.1-flinkdemo-fat-jar.jar ~/Downloads/test_8GB.csv ~/Downloads/result.csv
+```
